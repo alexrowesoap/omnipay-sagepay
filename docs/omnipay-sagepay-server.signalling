@@ -1,0 +1,78 @@
+
+# omnipay/sagepay (Sagepay-Server, success path)
+# Author: Jason Judge <jason@academe.co.uk>
+# Version: very rough first draft for comment.
+# It kind of mixes up data flows and process calls
+# in the arcs, so be wary of that, until it is
+# refined.
+# It is going to be helpful to list the important
+# data items in each flow. These items all have two
+# names - the gateway name, and the OmniPay abstracted
+# name. I'm not sure if those items should be listed
+# on the diagram, but they really should be close-by.
+
+msc {
+    # Options
+    hscale=auto;
+    #wordwraparcs=1;
+
+    # Title
+    title: OmniPay-SagePay;
+    subtitle: Sagepay-Server\nPAYMENT/DEFERRED/AUTHENTICATE\nSuccess Path;
+
+    # Entities
+    DB [label="Database", weak];
+    App [label="Application"],
+    OP [label="OmniPay"],
+    SD [label="SagePay Driver"],
+    SP [label="SagePay"];
+
+    # Process/Arcs
+    App -- App [label="Collect Personal Details"];
+    comment: You cannot start a transaction without\nsending valid user details.;
+    App -- App [label="Set Basket in Session"];
+    comment: Access to the basket needed to process on\nfinal return;
+
+    App..App: Initialisation
+    {
+        App -> OP [label="purchase::send()"];
+        OP -> SD [label="ServerPurchaseRequest()"];
+        SD -> SP [label="PAYMENT"];
+        SP -> SD [label="PAYMENT Response"];
+        SD -> OP -> App [label="Response()"];
+        App -> DB [label="Store Transaction"];
+        comment: Start the interchange with the noticiation callback\noutside the user's session.;
+        App -> SP [label="POST redirect\ngetRedirectResponse() or custom auto-submit form"];
+    };
+
+    SP..SP: Card Authentication
+    {
+        SP -- SP [label="Get Card Details"];
+        SP -- SP [label="Authenticate Card Details"];
+
+        App..App: Handle Notify (Callback, no session)
+        {
+            SP -> App [label="PAYMENT Notification Callback"];
+            DB -> App [label="Retrieve Transaction"];
+            comment: Saved in the user's session.;
+            App -> OP [label="gateway::completePurchase()"];
+            OP -> SD [label="ServerCompleteAuthorizeRequest()"];
+            SD -- SD [label="Check SecurityKey"];
+            SD -> OP -> App [label="ServerCompleteAuthoriseResponse()"];
+            App -- App [label="Check for success"];
+            comment: Use getStatus() to check for OK,\nAUTHORISED or REGISTERED.;
+            App -> DB [label="Update Transaction"];
+            comment: This is how the final confirmation\npage gets to hear the result.;
+            App -- App [label="(alt1) Process Basket Items"];
+            comment: Process the basket, assuming we have a link to it.\nOnly do quick actions here as the\nnotification callback does not have time to waste.;
+            App -> SP [label="PAYMENT Notification Result\nIncludes \"Order Complete\" redirect URL"];
+        };
+    };
+
+    SP -> App [label="Order Complete GET redirect"];
+    DB -> App [label="Retrieve Transaction "];
+    App -- App [label="(alt2) Process Basket Items\n(mark as paid)"];
+    comment: Handle the basket processing if not done\nin the notification callback.\nThere is some risk leaving it until now, in case\nthe user doesn't make it here.;
+    App -- App [label="Clear Basket from Session"];
+    comment: Everything should be paid/authed and in process.;
+}
