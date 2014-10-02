@@ -23,3 +23,26 @@ Doing so has thrown up a couple of issues that have been bugging me. They are:
 
 Anyway, take a look at the network flow diagram(s) and see how they work for you.
 Feedback would be apreciated.
+
+Sagepay-Server
+--------------
+
+Some notes:
+
+* The best place to ensure the result of the transaction request is processed, is the
+  first point at which you know the result of the transaction. For SagePay Server, this
+  is in the notification contgroller.
+* The notification controller also has the important job of responding to SagePay
+  to confirm the message has been received and understood. For this reason, the less
+  additional processing the notification controller does, the less risk is involved; the
+  less there will be to go wrong.
+* If there are remote systems to inform of the result of the transaction, for example
+  an ERP that needs to be informed what invoices have been paid for, then the best way
+  to handle that would be to throw the transaction details into a queue for processing
+  independently. For that to work, enough details about the transaction source, e.g. the
+  basket or cart being paid for, must be stored alongside the transactino in the back-end
+  data store, to enable the queued item to be given enough information to process that
+  basket. Bear in mind also that the basket in the user's session is about to be cleared
+  as soon as the user is returned to your application by SagePay. It's all about spped and
+  reliability of the processing of the transaction result, and timing.
+
