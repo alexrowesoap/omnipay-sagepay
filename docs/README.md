@@ -24,8 +24,8 @@ Doing so has thrown up a couple of issues that have been bugging me. They are:
 Anyway, take a look at the network flow diagram(s) and see how they work for you.
 Feedback would be apreciated.
 
-Sagepay-Server
---------------
+[Sagepay-Server](https://github.com/judgej/omnipay-sagepay/blob/patch-1/docs/omnipay-sagepay-server.pdf?raw=true) (PDF)
+--------------------
 
 Some notes:
 
