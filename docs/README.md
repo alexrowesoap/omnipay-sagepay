@@ -21,3 +21,5 @@ Doing so has thrown up a couple of issues that have been bugging me. They are:
   the final page the user is returned to from SagePay. (This is SagePay Server, where
   the user is sent off to the SagePay site - the iframe version is likely to differ.)
 
+Anyway, take a look at the network flow diagram(s) and see how they work for you.
+Feedback would be apreciated.
