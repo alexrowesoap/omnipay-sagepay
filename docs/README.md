@@ -46,10 +46,29 @@ Some notes:
   as soon as the user is returned to your application by SagePay. It's all about spped and
   reliability of the processing of the transaction result, and timing.
 
-The non-success paths are not shown in the network flow. They will include:
+The non-success paths are not shown in the network flow. They will include (for example):
 
 * A notification for an unknown transaction, or for a transaction we have already processed
   a notification for, or a transaction that fails the SecurityKey check. 
   In these cases, we will return an error to SagePay, but will not update
   the transaction details in the back-end storage, since the notification cannot be trustsed
   to have come from a reliable or legitimate source.
+* The user cancelling the request. When this happens, an ABORT notification will be
+  sent to the application from SagePay to indicate the request is being cancelled.
+  The VendorTxCode in the session must be discarded. The basket could be cleared, or it
+  could remain intact in the session, so the user can have another go at paying for it.
+  It really depends on the application.
+
+Not shown in the diagram is the user's session. Within the session we have the basket
+details, which are processed as "paid" or "authorised" once the transaction request is
+accepted. The basket in this case does not need to be a shop shopping cart - it is any
+record that details what the payment is being made for, and is used to process the
+successful payment through the application.
+
+In the session will also be the VendorTxCode. This is a local transaction ID, which must
+be unique (across all past transactions in the SagePay account) and is used to index
+the transaction and link it across pages and within the notification controller.
+Although there could conceivably be mutliple transactions being authorised and processed
+at the same time within a session, it is advisable that a single user session handles
+just one transaction to completion at a time, so the VendorTxCode in the session
+will validate against all messages until the user reaches the end.
