@@ -46,3 +46,10 @@ Some notes:
   as soon as the user is returned to your application by SagePay. It's all about spped and
   reliability of the processing of the transaction result, and timing.
 
+The non-success paths are not shown in the network flow. They will include:
+
+* A notification for an unknown transaction, or for a transaction we have already processed
+  a notification for, or a transaction that fails the SecurityKey check. 
+  In these cases, we will return an error to SagePay, but will not update
+  the transaction details in the back-end storage, since the notification cannot be trustsed
+  to have come from a reliable or legitimate source.
